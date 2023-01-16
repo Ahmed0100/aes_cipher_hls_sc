@@ -1,30 +1,63 @@
-#ifndef TB_AES
-#define TB_AES
+//========================================================================================
+// 
+//
+// File Name    : tb_aes_cipher.h
+// Description  : Testbench
+// Release Date : 29/02/2013
+// Author       : PolyU DARC Lab
+//                Benjamin Carrion Schafer, Anushree Mahapatra 
+// 
+// Revision History
+//---------------------------------------------------------------------------------------
+// Date        Version   Author      Description
+//---------------------------------------------------------------------------------------
+//14/02/2013    1.0     PolyU         AES Cipher  testbench module description
+//=======================================================================================
+
+
+#ifndef TB_AES_H
+#define TB_AES_H
+
 #include "define.h"
 
-SC_MODULE(tb_aes)
-{
-	sc_in<bool> clk;
-	sc_in<bool> reset;
-	sc_in<sc_uint<8> > data_out[SIZE];
+SC_MODULE (test_aes){
 
-	sc_out<sc_uint<8> > data_in[SIZE];
-	sc_out<sc_uint<8> > key_in[SIZE];
+	// inputs
+	sc_in<bool>          clk;
+	sc_in<bool>          rst;
+	sc_in<sc_uint<8> >   odata[SIZE];
 
-	FILE * data_in_file, *key_in_file,  *golden_out_file, *data_out_file;
+	// outputs
+	sc_out<sc_uint<8> >   idata[SIZE];
+	sc_out<sc_uint<8> >   ikey[SIZE];
+
+	//For data feeding
+	FILE * in_file, *in_file_key,  *out_golden_file, *out_file;
 	FILE  *out_aes_cipher_file, *diff_file;
-	sc_uint<8> key_input[SIZE];
+
+	sc_uint<8>  input_key[SIZE];
+
+	/* C */
 	void compare_results();
-	void send();
+
+	/* R */
 	void recv();
 
-	SC_CTOR(tb_aes)
-	{
+	/* S */
+	void send();
+
+	SC_CTOR ( test_aes ) {
+
 		SC_CTHREAD(send,clk.pos());
-		reset_signal_is(reset,false);
+		reset_signal_is(rst,false);
+
 		SC_CTHREAD(recv,clk.pos());
-		reset_signal_is(reset,false);
+		reset_signal_is(rst,false);
 	}
-	~tb_aes(){}
+
+	~test_aes(){}
+
 };
-#endif
+
+
+#endif // TB_AES_H

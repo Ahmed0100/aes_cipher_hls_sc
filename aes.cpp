@@ -1,8 +1,7 @@
-aes.cpp
 #include "define.h"
 #include "aes.h"
 
-const U8 s_box[256] = {
+const U8 sbox[256] = {
     //0     1    2      3     4    5     6     7      8    9     A      B    C     D     E     F
     0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
     0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0,
@@ -22,178 +21,182 @@ const U8 s_box[256] = {
     0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16
 };
 
-const U8 r_con[NUM_OF_ROUNDS] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36};
+const U8 rcon[Nr] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36};
 
-void aes::assign_key(U8 key_in[SIZE],U8 key_out[SIZE])
+
+void aes::assign_key(U8 key_in[SIZE], U8 key_out[SIZE])
 {
-	for(int i=0;i<SIZE;i++)
-		key_out[i]=key_in[i];
+    for (int i = 0; i < SIZE; i++)
+        key_out[i] = key_in[i];
 }
 
-void aes::sub_bytes(U8 state[SIZE])
+void aes::SubBytes(U8 state[SIZE])
 {
-	for(int i=0;i<SIZE;i++)
-	{
-		state[i] = s_box[state[i]];
-	}
+    for (int i = 0; i < SIZE; i++)
+        state[i] = sbox[state[i]];
 }
 
-void shift_rows(U8 state[SIZE])
+void aes::ShiftRows(U8 state[SIZE])
 {
-	for(int row=0;row<4; row++)
-	{
-		for(int counter=0;counter<row;counter++)
-		{
-			int row_index = NUM_OF_COLS * row;
-			U8 tmp = state[row_index];
-			int col = 0;
-			for(col=1;col<NUM_OF_COLS;col++)
-			{
-				state[row_index+col-1] = state[row_index+col];
-			}
-			state[row_index+col - 1] = tmp;
-		}
-	}
+    for (int row = 0; row < 4; row++)
+    {
+        for (int counter = 0; counter < row; counter++)
+        {
+            int row_ind = Nb * row;
+            U8 tmp = state[row_ind];
+            int col = 0;
+			
+            for (col = 1; col < Nb; col++)
+            {
+                state[row_ind + col - 1] = state[row_ind + col];
+            }
+            state[row_ind + col - 1] = tmp;
+        }
+    }
 }
 
-void aes::add_round_key(U8 state[SIZE], U8 key[SIZE])
+void aes::MixColumns(U8 state[SIZE])
 {
-	for(int i=0;i<SIZE; i++)
-	{
-		state[i] = state[i]^key[i];
-	}
-}
-void aes::mix_cols(U8 state[SIZE])
-{
-	U8 state_tmp[4][NUM_OF_COLS];
-	U8 col_tmp[4];
-	U8 x_2,x_3,x_1;
-	for(int row=0;row<4;row++)
-	{
-		for(int col=0;col<NUM_OF_COLS;col++)
-		{
-			state_tmp[row][col] = state[row*NUM_OF_COLS+col];
-		}
-	}
+    U8 state_tmp[4][Nb];
+    U8 col_tmp[4];
+    U8 x_2, x_3, x_1;
 
-	for(col=0;col<NUM_OF_COLS;col++)
-	{
-		for(int row=0;row<4;row++)
-		{
-			int index[4];
-			for(int i=0;i<4;i++)
-				index[i] = clip(row+i);
-		
-			x_2 = xtime_2(state_tmp[index[0]][col]);
-			x_3 = xtime_3(state_tmp[index[1]][col]);
-			x_1 = xadd(state_tmp[index[2]][col], state_tmp[index[3]][col]);
-			col_tmp[row] = xadd(xadd(x_2,x_3),x_1);
-		}
-		for(int row=0;row<4;row++)
-		{
-			state_tmp[row][col] = col_tmp[row];
-		}
-	}
-	for(col=0;col<NUM_OF_COLS;col++)
-	{
-		for(int row=0;row<4;row++)
-		{
-			state[row+NUM_OF_COLS+col] =state_tmp[row][col];
-		}
-	}
-}
+    for (int row = 0; row < 4; row++)
+        for (int col = 0; col < Nb; col++)
+            state_tmp[row][col] = state[row * Nb + col];
 
-U8 aes:xadd(U8 in1,U8 in2)
-{
-	return in1^in2;
+    for (int col = 0; col < Nb; col++)
+    {
+        for (int row = 0; row < 4; row++)
+        {
+            int indice[4];
+            for (int i = 0; i < 4; i++)
+            {
+                indice[i] = clip(row + i);
+            }
+            
+            x_2 = xtime_2(state_tmp[indice[0]][col]);
+            x_3 = xtime_3(state_tmp[indice[1]][col]);
+            x_1 = xadd(state_tmp[indice[2]][col], state_tmp[indice[3]][col]);
+            col_tmp[row] = xadd(xadd(x_2, x_3), x_1);
+        }
+
+        for (int row = 0; row < 4; row++)
+            state_tmp[row][col] = col_tmp[row];
+    }
+
+    for (int row = 0; row < 4; row++)
+    {
+        for (int col = 0; col < Nb; col++)
+        {
+            state[row * Nb + col] = state_tmp[row][col];
+        }
+    }
 }
 
 U8 aes::xtime_2(U8 data)
 {
-	U8 tmp = data<<1;
-	if(data >= 0x80)
-		tmp = tmp ^ 0x1b;
-	return tmp;
+    U8 tmp = data << 1;
+    if (data >= 0x80)
+        tmp = tmp ^ 0x1b;
+    return tmp;
+}
+
+U8 aes::xadd(U8 in1, U8 in2)
+{
+    return (in1 ^ in2);
 }
 
 U8 aes::xtime_3(U8 data)
 {
-	U8 x_2 = xtime_2(data);
-	return xadd(x_2,data);
+    U8 x_2 = xtime_2(data);
+    return xadd(x_2, data);
 }
 
-U8 aes::clip(int n)
+int aes::clip(int n)
 {
-	if(n>3)
-		n=n-4;
-	return n;
+    if (n > 3)
+        n = n - 4;
+    return n;
 }
 
-void aes::key_expansion(U8 current_key[SIZE], U8 r_con, U8 next_key[SIZE])
+void aes::KeyExpansion(U8 current_key[SIZE], U8 rcon, U8 next_key[SIZE])
 {
-	U8 key_in_tmp[4][NUM_OF_COLS];
-	U8 key_out_tmp[4][NUM_OF_COLS];
-	for(int i=0;i<4;i++)
-	{
-		for(int j=0;j<NUM_OF_COLS;j++)
-		{
-			key_in_tmp[i][j] = current_key[i*NUM_OF_COLS+j];
-		}
-	}
-	for(int col=0;col<NUM_OF_COLS;col++)
-	{
-		U8 col_tmp[4];
-		if(col == 0)
-		{
-			col_tmp[0] = s_box[key_in_tmp[1][NUM_OF_COLS-1]]^r_con;
-			col_tmp[1] = s_box[key_in_tmp[2][NUM_OF_COLS-1]];
-			col_tmp[2] = s_box[key_in_tmp[3][NUM_OF_COLS-1]];
-			col_tmp[3] = s_box[key_in_tmp[0][NUM_OF_COLS-1]];
-		}
-		else
-		{
-			for(int i=0;i<4;i++)
-			{
-				col_tmp[i] = key_out_tmp[i][col-1];
-			}
-		}
-		for(int row=0;row<4;row++)
-			key_out_tmp[row][col] = key_in_tmp[row][col] ^ col_tmp[row];
-	}
-   for (int row = 0; row < 4; row++)
-        for (int col = 0; col < NUM_OF_COLS; col++)
-            next_key[row * NUM_OF_COLS + col] = key_out_tmp[row][col];
+    U8 key_in_tmp[4][Nb];
+    U8 key_out_tmp[4][Nb];
+
+    for (int i = 0; i < 4; i++)
+        for (int j = 0; j < Nb; j++)
+            key_in_tmp[i][j] = current_key[i * Nb + j];
+
+    for (int col = 0; col < Nb; col++)
+    {
+        U8 col_tmp[4];
+        if (col == 0)
+        {
+            col_tmp[0] = sbox[key_in_tmp[1][Nb - 1]] ^ rcon;
+            col_tmp[1] = sbox[key_in_tmp[2][Nb - 1]];
+            col_tmp[2] = sbox[key_in_tmp[3][Nb - 1]];
+            col_tmp[3] = sbox[key_in_tmp[0][Nb - 1]];
+        }
+        else
+        {
+            for (int i = 0; i < 4; i++)
+                col_tmp[i] = key_out_tmp[i][col - 1];
+        }
+        for (int row = 0; row < 4; row++)
+            key_out_tmp[row][col] = key_in_tmp[row][col] ^ col_tmp[row];
+    }
+
+    for (int row = 0; row < 4; row++)
+        for (int col = 0; col < Nb; col++)
+            next_key[row * Nb + col] = key_out_tmp[row][col];
+}
+
+void aes::AddRoundKey(U8 state[SIZE], U8 key[SIZE])
+{
+    for (int i = 0; i < SIZE; i++)
+        state[i] = state[i] ^ key[i];
 }
 
 void aes::run()
 {
-	U8 data_in_buff[SIZE];
-	U8 key_buff[SIZE];
-	U8 current_key[SIZE];
-	U8 next_key[SIZE];
-	wait();
-	while(1)
-	{
-		for(int i=0;i<SIZE;i++)
-		{
-			data_in_buff[i]=data_in.read();
-			key_buff[i] = key_in.read();
-		}
-		assign_key(key_buff,current_key);
-		//initial round
-		add_round_key(data_in_buff,current_key);
-		for(int i=0;i<NUM_OF_ROUNDS;i++)
-		{
-			sub_bytes(data_in_buff);
-			shift_rows(data_in_buff);
-			if(i<NUM_OF_ROUNDS-1)
-				mix_cols(data_in_buff);
-			key_expansion(current_key,r_con[i],next_key);
-			add_round_key(data_in_buff,next_key);
-			assign_key(next_key,current_key);
-		}
-		for(int i=0;i<SIZE;i++)
-			data_out[i].write(data_in_buff[i]);
-		wait();
-	}
+    U8 idata_buf[SIZE];
+    U8 key_buf[SIZE];
+    U8 current_key[SIZE];
+    U8 next_key[SIZE];
+    
+    wait();
+
+    while(1)
+    {
+        for (int i = 0; i < SIZE; i++)
+        {
+            idata_buf[i] = idata[i].read();
+            key_buf[i] = ikey[i].read();
+        }
+
+        assign_key(key_buf, current_key);
+
+        // Initial round
+        AddRoundKey(idata_buf, current_key);
+
+        // 9 rounds
+        for (int i = 0; i < Nr; i++)
+        {
+            SubBytes(idata_buf);
+            ShiftRows(idata_buf);
+            if (i < Nr - 1)
+                MixColumns(idata_buf);
+            KeyExpansion(current_key, rcon[i], next_key);
+            AddRoundKey(idata_buf, next_key);
+
+            assign_key(next_key, current_key);
+        }
+
+        for (int i = 0; i < SIZE; i++)
+            odata[i].write(idata_buf[i]);
+
+        wait();
+    }
 }
