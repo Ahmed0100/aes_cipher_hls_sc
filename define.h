@@ -1,3 +1,18 @@
+//========================================================================================
+// 
+//
+// File Name    : define.h
+// Description  : Main definition header file for AES
+// Release Date : 24/11/2014
+// Author       : PolyU DARC Lab
+//                Benjamin Carrion Schafer, Shuangnan Liu 
+//
+// Revision History
+//---------------------------------------------------------------------------------------
+// Date        Version  Author       Description
+//----------------------------------------------------------------------------------------
+//24/11/2014     1.0     PolyU        definition file for AES
+//=======================================================================================
 
 #ifndef DEFINE_H
 #define DEFINE_H
@@ -8,9 +23,9 @@
 #include "stdio.h"
 
 
-#define NUM_OF_COL 4 // Number of columns comprising the State
+#define Nb 4 // Number of columns comprising the State
 #define SIZE 16
-#define NUM_OF_ROUNDS 10 // Number of rounds
+#define Nr 10 // Number of rounds
 
 typedef unsigned int U32;
 typedef unsigned short int U16;
@@ -30,3 +45,4 @@ typedef unsigned char U8;
 //#define WAVE_DUMP          // set do dump waveform or set as compile option -DWAVE_DUMP
 
 #endif  // DEFINE_H
+
